@@ -78,6 +78,28 @@ label{font-size:2vmin;display:flex;gap:1vmin;align-items:center}
 <small>A prévia é ao vivo nos botões abaixo. Ative MOVER e arraste cada grupo de botões.</small></div></div>
 <div id="ksel" class="scr off"><div class="top"><b>ESCOLHA SEU KIRBY</b><span id="kmode"></span></div><div class="body"><div id="kgrid"></div><div class="pv"><canvas id="kpv" width="260" height="230"></canvas><h2 id="kn"></h2><div id="kp"></div><div id="ks"></div><ul id="km"></ul></div></div><div class="bot"><label>CPU <select id="kdf"><option value="1">Mega fácil</option><option value="3">Fácil</option><option value="5" selected>Normal</option><option value="7">Difícil</option><option value="8">Muito difícil</option><option value="9">Impossível</option></select></label><button id="kback">VOLTAR</button><button id="kok">CONFIRMAR ▶</button></div></div>
 <div id="ssel" class="scr off"><div class="top"><b>ESCOLHA A FASE</b><span id="smode"></span></div><div class="body"><div id="sgrid"></div><div class="pv"><canvas id="spv" width="300" height="170"></canvas><h2 id="sn"></h2><div id="sd"></div><ul id="sh"></ul></div></div><div class="bot"><button id="sback">VOLTAR</button><button id="sok">LUTAR! ▶</button></div></div>
+ 
+<div id="onlscr" class="scr off">
+  <div class="top">
+    <b>PUFF BRAWL ONLINE</b>
+    <span>2 JOGADORES</span>
+  </div>
+  <div class="body" style="flex-direction:column;align-items:center;justify-content:center;text-align:center">
+    <h2 style="margin:0;font-size:4vmin">JOGAR ONLINE</h2>
+    <button id="netcreate" class="t3">CRIAR SALA</button>
+    <div style="display:flex;gap:1vmin;align-items:center;justify-content:center;flex-wrap:wrap">
+      <input id="netcode" placeholder="CÓDIGO DA SALA" maxlength="12" style="font:inherit;font-weight:800;text-align:center;text-transform:uppercase;width:28vmin;padding:1.2vmin;background:#2b2250;color:white;border:.35vmin solid white;border-radius:1vmin">
+      <button id="netjoin">ENTRAR</button>
+    </div>
+    <button id="netmatch" class="t4">PARTIDA ALEATÓRIA</button>
+    <h2 id="netroomcode" style="margin:1vmin 0;font-size:3.5vmin"></h2>
+    <p id="netstatus" style="font-size:2.3vmin;margin:0">Escolha uma opção para começar.</p>
+  </div>
+  <div class="bot">
+    <button id="netback">VOLTAR</button>
+  </div>
+</div>
+
 <div id="tc"><div class="l"><i></i><button data-k="u">▲</button><i></i><button data-k="l">◀</button><button data-k="d">▼</button><button data-k="r">▶</button></div>
 <div class="r"><button data-k="a">ATQ</button><button data-k="b">ESP</button><button data-k="c">TEC</button><button data-k="w">ENG</button><button data-k="j">PULO</button></div></div></div>
 <script>
