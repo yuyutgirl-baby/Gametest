@@ -760,7 +760,7 @@ function buildKsel(){const gr=$('kgrid');gr.innerHTML='';KI.forEach((k,i)=>{cons
 function kInfo(){const k=KI[G.ki],ab=k[2];[...$('kgrid').children].forEach((c,i)=>c.classList.toggle('on',i==G.ki));$('kn').textContent=k[0].toUpperCase();$('kp').textContent='PODER: '+AX[ab][2]+' '+AX[ab][0]+'  (+20% de dano)';$('ks').textContent='ESPECIALIDADE: '+k[4]+' - '+k[5];
  $('km').innerHTML='<li><b>ATQ:</b> jab em combo, inclinados, aereos (use direcoes)</li><li><b>ESP:</b> '+BN[ab]+' | lado martelo | cima cutter | baixo pedra</li><li><b>TEC:</b> '+TN[ab]+' | lado investida | cima leque | baixo armadilha | ar mergulho</li><li><b>ENG:</b> engula criaturas para copiar poderes; engula o rival e aperte ↓ para copiar o poder dele ou ATQ para cuspir</li>'}
 function kpLoop(){if($('ksel').classList.contains('off'))return;kpT++;const c=$('kpv'),x=c.getContext('2d'),k=KI[G.ki],seq=['idle','walk','jab','ab','float'],ph=Math.floor(kpT/75)%seq.length;let st=seq[ph];if(st=='ab')st=MV['ab_'+k[2]].s;const n=FR[st],fi=(kpT/(st=='idle'?9:4)|0)%n;x.clearRect(0,0,260,230);x.fillStyle='rgba(0,0,0,.25)';x.beginPath();x.ellipse(130,196,50,10,0,0,7);x.fill();x.save();x.translate(130,170);x.scale(2.1,2.1);x.drawImage(SH(k[1],k[2])[st],fi*SPW,0,SPW,SPH,-SPW/2,-25-SPH/2,SPW,SPH);x.restore();requestAnimationFrame(kpLoop)}
-function openKsel(mode){G.pm=mode;G.s='sel';$('menu').classList.add('off');$('ssel').classList.add('off');$('ksel').classList.remove('off');$('kmode').textContent=mode=='arc'?'MODO ARCADE':mode=='vs'?'VS CPU':'ONLINE';$('kdf').parentElement.style.display=mode=='onl'?'none':'';$('kok').textContent=mode=='vs'?'ESCOLHER FASE ▶':mode=='arc'?'COMEÇAR ▶':'IR PARA O ONLINE ▶';buildKsel();kpT=0;requestAnimationFrame(kpLoop)}
+function openKsel(mode){G.pm=mode;G.s='sel';$('menu').classList.add('off');$('ssel').classList.add('off');$('ksel').classList.remove('off');$('kmode').textContent=mode=='arc'?'MODO ARCADE':mode=='vs'?'VS CPU':'ONLINE';$('kdf').parentElement.style.display=mode=='onl'?'none':'';$('kok').textContent=mode=='vs'?'ESCOLHER FASE ▶':mode=='arc'?'COMEÇAR ▶':'CONFIRMAR PERSONAGEM ▶';buildKsel();kpT=0;requestAnimationFrame(kpLoop)}
 
 $('arc').onclick=()=>{ainit();openKsel('arc')};
 $('vs').onclick=()=>{ainit();openKsel('vs')};
@@ -774,8 +774,15 @@ $('onl').onclick=()=>{
  $('netroomcode').textContent='';
 };
 
-$('kback').onclick=()=>{S('jump');showMenu()};
- 
+
+$('kback').onclick=()=>{
+ S('jump');
+ if(G.pm==='onl'){
+  $('ksel').classList.add('off');
+  $('onlscr').classList.remove('off');
+ }else showMenu();
+};
+
 window.netPlayer=null;
 
 function netSendSelection(){
@@ -785,76 +792,137 @@ function netSendSelection(){
  n.ownKi=G.ki;
  n.ws.send(JSON.stringify({type:'select',ki:G.ki}));
  $('ksel').classList.add('off');
- alert('Personagem escolhido. Aguardando o adversário...');
+ $('onlscr').classList.remove('off');
+ $('netstatus').textContent='Personagem escolhido! Aguardando o adversário...';
 }
- 
+
 function netStartIfReady(){
  const n=window.netPlayer;
  if(!n||n.started||n.ownKi==null||n.opponentKi==null||!n.player)return;
  n.started=true;
+ $('onlscr').classList.add('off');
+ $('ksel').classList.add('off');
  const p1=n.player===1?n.ownKi:n.opponentKi;
  const p2=n.player===2?n.ownKi:n.opponentKi;
  startMatch({online:1,lv:0,stg:0,st0:3,st1:3,p1ki:p1,p2ki:p2});
 }
 
-window.netOpen=()=>{
- const ac=prompt('PUFFBRAWL ONLINE\n\n1 - Criar sala\n2 - Entrar com código\n3 - Partida aleatória');
- if(!ac)return;
- let mode=ac==='1'?'create':ac==='2'?'join':ac==='3'?'match':null;
- if(!mode){alert('Opção inválida');return}
- let code='';
- if(mode==='join'){
-  code=(prompt('Digite o código da sala:')||'').trim().toUpperCase();
-  if(!code)return;
- }
+window.netOpen=(mode,code='')=>{
+ $('netstatus').textContent='Conectando ao servidor...';
+ $('netroomcode').textContent='';
  const ws=new WebSocket('wss://puffbrawl-server.yuyutgirl.workers.dev/ws?mode='+mode+(code?'&code='+encodeURIComponent(code):''));
  window.puffSocket=ws;
  window.netPlayer={ws,player:0,ownKi:null,opponentKi:null,remoteInput:{},sent:false,started:false};
- ws.onopen=()=>console.log('Conectado ao servidor PuffBrawl');
+
+ ws.onopen=()=>{
+  $('netstatus').textContent='Conectado! Aguardando resposta do servidor...';
+ };
+
  ws.onmessage=e=>{
   let d;
   try{d=JSON.parse(e.data)}catch{return}
   const n=window.netPlayer;
   if(!n)return;
+
   if(d.type==='room-created'){
    n.code=d.code;
-   alert('Sala criada!\nCódigo: '+d.code+'\nEnvie esse código ao outro jogador.');
+   $('netroomcode').textContent='CÓDIGO: '+d.code;
+   $('netstatus').textContent='Sala criada! Envie o código ao outro jogador e aguarde.';
   }
+
   if(d.type==='room-joined'){
    n.player=2;
-   alert('Você entrou na sala '+d.code+'!');
-   netSendSelection();
+   $('netstatus').textContent='Você entrou na sala! Escolha seu Kirby.';
+   openKsel('onl');
   }
+
   if(d.type==='opponent-joined'){
    n.player=1;
-   alert('O adversário entrou na sala!');
-   netSendSelection();
+   $('netstatus').textContent='O adversário entrou! Escolha seu Kirby.';
+   openKsel('onl');
   }
-  if(d.type==='searching')alert('Procurando adversário...');
+
+  if(d.type==='searching'){
+   $('netstatus').textContent='Procurando adversário...';
+  }
+
   if(d.type==='match-found'){
    n.player=d.player;
-   alert('Adversário encontrado! Jogador '+d.player);
-   netSendSelection();
+   $('netstatus').textContent='Adversário encontrado! Escolha seu Kirby.';
+   openKsel('onl');
   }
+
   if(d.type==='select'){
    n.opponentKi=d.ki;
    netStartIfReady();
   }
+
   if(d.type==='input'&&d.input)n.remoteInput=d.input;
+
   if(d.type==='opponent-left'){
    n.remoteInput={};
-   alert('O adversário saiu da sala.');
+   $('netstatus').textContent='O adversário saiu da sala.';
+   $('onlscr').classList.remove('off');
   }
-  if(d.type==='error')alert(d.message);
+
+  if(d.type==='error'){
+   $('netstatus').textContent='Erro: '+d.message;
+  }
  };
- ws.onerror=()=>console.log('Erro de WebSocket');
- ws.onclose=e=>{
-  console.log('Conexão encerrada',e.code,e.reason);
+
+ ws.onerror=()=>{
+  $('netstatus').textContent='Erro ao conectar ao servidor.';
+ };
+
+ ws.onclose=()=>{
   if(window.netPlayer)window.netPlayer.remoteInput={};
  };
 };
 
-$('kok').onclick=()=>{ainit();S('copy');if(G.pm=='arc'){$('ksel').classList.add('off');G.base=+$('kdf').value;G.score=0;F=[];arcRound(0)}else if(G.pm=='vs')openSsel();else if(window.netOpen)netOpen()};
+$('netcreate').onclick=()=>{
+ if(window.netPlayer&&window.netPlayer.ws)window.netPlayer.ws.close();
+ netOpen('create');
+};
+
+$('netjoin').onclick=()=>{
+ const code=$('netcode').value.trim().toUpperCase();
+ if(!code){
+  $('netstatus').textContent='Digite o código da sala.';
+  return;
+ }
+ if(window.netPlayer&&window.netPlayer.ws)window.netPlayer.ws.close();
+ netOpen('join',code);
+};
+
+$('netmatch').onclick=()=>{
+ if(window.netPlayer&&window.netPlayer.ws)window.netPlayer.ws.close();
+ netOpen('match');
+};
+
+$('netback').onclick=()=>{
+ if(window.netPlayer&&window.netPlayer.ws)window.netPlayer.ws.close();
+ window.netPlayer=null;
+ window.puffSocket=null;
+ $('onlscr').classList.add('off');
+ showMenu();
+};
+
+$('kok').onclick=()=>{
+ ainit();
+ S('copy');
+ if(G.pm==='arc'){
+  $('ksel').classList.add('off');
+  G.base=+$('kdf').value;
+  G.score=0;
+  F=[];
+  arcRound(0);
+ }else if(G.pm==='vs'){
+  openSsel();
+ }else if(G.pm==='onl'){
+  netSendSelection();
+ }
+};
+
 // ---- tela de selecao de fase ----
 const HZN={spring:'molas',wind:'ventos',conv:'esteiras',zone:'armadilhas temporizadas',strike:'objetos caindo',roll:'troncos rolando'};
 function thumb(c,i){const x=c.getContext('2d'),w=c.width,h=c.height,k=w/800;if(i<0){x.fillStyle='#2b2250';x.fillRect(0,0,w,h);x.fillStyle='#fff';x.font='bold '+h*.5+'px sans-serif';x.textAlign='center';x.fillText('?',w/2,h*.68);return}
