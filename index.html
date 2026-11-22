@@ -774,8 +774,6 @@ window.netOpen=()=>{
  ws.onmessage=e=>{
   let d;
   try{d=JSON.parse(e.data)}catch{return}
-  if(d.type==='room-created')netPlayer=1;
-if(d.type==='room-joined'||d.type==='match-found')netPlayer=d.player;
   const n=window.netPlayer;
   if(!n)return;
   if(d.type==='room-created'){
