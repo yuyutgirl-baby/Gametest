@@ -90,6 +90,8 @@ addEventListener('keyup',e=>K[e.code]=0);
 document.querySelectorAll('#tc button').forEach(b=>{const k=b.dataset.k;b.onpointerdown=e=>{e.preventDefault();ainit();T[k]=1;b.classList.add('on')};['pointerup','pointercancel','pointerleave'].forEach(v=>b['on'+v]=()=>{T[k]=0;b.classList.remove('on')})});
 const KM={l:['ArrowLeft','KeyA'],r:['ArrowRight','KeyD'],u:['ArrowUp','KeyW'],d:['ArrowDown','KeyS'],j:['Space','KeyX'],a:['KeyJ','KeyZ'],b:['KeyK','KeyC'],s:['KeyL','ShiftLeft'],c:['KeyI','KeyV'],w:['KeyE','KeyU']};
 const rd=()=>{const o={};for(const k in KM)o[k]=KM[k].some(c=>K[c])||T[k]?1:0;return o};
+let netPlayer=0,netPeerInput={l:0,r:0,u:0,d:0,j:0,a:0,b:0,c:0,w:0,s:0},netStarted=false;
+function netSend(data){if(window.puffSocket&&window.puffSocket.readyState===1)window.puffSocket.send(JSON.stringify(data))}
 const ov=(a,b)=>a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;
 const cl=(v,a,b)=>Math.max(a,Math.min(b,v));
 const COLS=[335,210,0,120,50,275,185,25];
@@ -733,32 +735,87 @@ function kpLoop(){if($('ksel').classList.contains('off'))return;kpT++;const c=$(
 function openKsel(mode){G.pm=mode;G.s='sel';$('menu').classList.add('off');$('ssel').classList.add('off');$('ksel').classList.remove('off');$('kmode').textContent=mode=='arc'?'MODO ARCADE':mode=='vs'?'VS CPU':'ONLINE';$('kdf').parentElement.style.display=mode=='onl'?'none':'';$('kok').textContent=mode=='vs'?'ESCOLHER FASE ▶':mode=='arc'?'COMEÇAR ▶':'IR PARA O ONLINE ▶';buildKsel();kpT=0;requestAnimationFrame(kpLoop)}
 $('arc').onclick=()=>{ainit();openKsel('arc')};$('vs').onclick=()=>{ainit();openKsel('vs')};$('onl').onclick=()=>{ainit();openKsel('onl')};
 $('kback').onclick=()=>{S('jump');showMenu()};
-window.netOpen=()=>{
-const ac=prompt('PUFFBRAWL ONLINE\n\n1 - Criar sala\n2 - Entrar com código\n3 - Partida aleatória');
-if(!ac)return;
-let mode=ac==='1'?'create':ac==='2'?'join':ac==='3'?'match':null;
-if(!mode){alert('Opção inválida');return}
-let code='';
-if(mode==='join'){
-code=(prompt('Digite o código da sala:')||'').trim().toUpperCase();
-if(!code)return;
+ 
+window.netPlayer=null;
+
+function netSendSelection(){
+ const n=window.netPlayer;
+ if(!n||n.sent||!n.player||!n.ws||n.ws.readyState!==1)return;
+ n.sent=true;
+ n.ownKi=G.ki;
+ n.ws.send(JSON.stringify({type:'select',ki:G.ki}));
+ $('ksel').classList.add('off');
+ alert('Personagem escolhido. Aguardando o adversário...');
 }
-const ws=new WebSocket('wss://puffbrawl-server.yuyutgirl.workers.dev/ws?mode='+mode+(code?'&code='+encodeURIComponent(code):''));
-window.puffSocket=ws;
-ws.onopen=()=>alert('Conectado ao servidor PuffBrawl!');
-ws.onmessage=e=>{
-let d;
-try{d=JSON.parse(e.data)}catch{return}
-if(d.type==='room-created')alert('Sala criada!\nCódigo: '+d.code+'\nEnvie esse código ao outro jogador.');
-if(d.type==='room-joined')alert('Você entrou na sala '+d.code+'!');
-if(d.type==='opponent-joined')alert('O adversário entrou na sala!');
-if(d.type==='searching')alert('Procurando adversário...');
-if(d.type==='match-found')alert('Adversário encontrado! Jogador '+d.player);
-if(d.type==='error')alert(d.message);
+ 
+function netStartIfReady(){
+ const n=window.netPlayer;
+ if(!n||n.started||n.ownKi==null||n.opponentKi==null||!n.player)return;
+ n.started=true;
+ const p1=n.player===1?n.ownKi:n.opponentKi;
+ const p2=n.player===2?n.ownKi:n.opponentKi;
+ startMatch({online:1,lv:0,stg:0,st0:3,st1:3,p1ki:p1,p2ki:p2});
+}
+
+window.netOpen=()=>{
+ const ac=prompt('PUFFBRAWL ONLINE\n\n1 - Criar sala\n2 - Entrar com código\n3 - Partida aleatória');
+ if(!ac)return;
+ let mode=ac==='1'?'create':ac==='2'?'join':ac==='3'?'match':null;
+ if(!mode){alert('Opção inválida');return}
+ let code='';
+ if(mode==='join'){
+  code=(prompt('Digite o código da sala:')||'').trim().toUpperCase();
+  if(!code)return;
+ }
+ const ws=new WebSocket('wss://puffbrawl-server.yuyutgirl.workers.dev/ws?mode='+mode+(code?'&code='+encodeURIComponent(code):''));
+ window.puffSocket=ws;
+ window.netPlayer={ws,player:0,ownKi:null,opponentKi:null,remoteInput:{},sent:false,started:false};
+ ws.onopen=()=>console.log('Conectado ao servidor PuffBrawl');
+ ws.onmessage=e=>{
+  let d;
+  try{d=JSON.parse(e.data)}catch{return}
+  if(d.type==='room-created')netPlayer=1;
+if(d.type==='room-joined'||d.type==='match-found')netPlayer=d.player;
+  const n=window.netPlayer;
+  if(!n)return;
+  if(d.type==='room-created'){
+   n.code=d.code;
+   alert('Sala criada!\nCódigo: '+d.code+'\nEnvie esse código ao outro jogador.');
+  }
+  if(d.type==='room-joined'){
+   n.player=2;
+   alert('Você entrou na sala '+d.code+'!');
+   netSendSelection();
+  }
+  if(d.type==='opponent-joined'){
+   n.player=1;
+   alert('O adversário entrou na sala!');
+   netSendSelection();
+  }
+  if(d.type==='searching')alert('Procurando adversário...');
+  if(d.type==='match-found'){
+   n.player=d.player;
+   alert('Adversário encontrado! Jogador '+d.player);
+   netSendSelection();
+  }
+  if(d.type==='select'){
+   n.opponentKi=d.ki;
+   netStartIfReady();
+  }
+  if(d.type==='input'&&d.input)n.remoteInput=d.input;
+  if(d.type==='opponent-left'){
+   n.remoteInput={};
+   alert('O adversário saiu da sala.');
+  }
+  if(d.type==='error')alert(d.message);
+ };
+ ws.onerror=()=>console.log('Erro de WebSocket');
+ ws.onclose=e=>{
+  console.log('Conexão encerrada',e.code,e.reason);
+  if(window.netPlayer)window.netPlayer.remoteInput={};
+ };
 };
-ws.onerror=()=>alert('Erro ao conectar ao servidor.');
-ws.onclose=()=>console.log('Conexão encerrada');
-};
+
 $('kok').onclick=()=>{ainit();S('copy');if(G.pm=='arc'){$('ksel').classList.add('off');G.base=+$('kdf').value;G.score=0;F=[];arcRound(0)}else if(G.pm=='vs')openSsel();else if(window.netOpen)netOpen()};
 // ---- tela de selecao de fase ----
 const HZN={spring:'molas',wind:'ventos',conv:'esteiras',zone:'armadilhas temporizadas',strike:'objetos caindo',roll:'troncos rolando'};
