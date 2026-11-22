@@ -577,7 +577,13 @@ function step(){G.t++;
   if(n==110){banner('3','#fff',28);S('cd')}if(n==135){banner('2','#fff',28);S('cd')}if(n==160){banner('1','#ffe23a',28);S('cd')}if(n==185){banner('VAI!','#ff8fbd',40);S('cd',1);G.s='play'}
   F.forEach(p=>{upd(p,{})});hazStep(1);if(bo)bossUpd(bo);return}
  if(G.s=='end'){G.ec++;F.forEach(p=>upd(p,{}));if(G.ec>200)afterEnd();parts();return}
+ if(window.netPlayer&&window.netPlayer.started){
+ const local=rd();
+ netSend({type:'input',input:local});
+ F.forEach((p,i)=>upd(p,i===(window.netPlayer.player===1?0:1)?local:window.netPlayer.remoteInput));
+}else{
  F.forEach((p,i)=>upd(p,p.cpu?ai(p,F[0],G.cfg.lv):rd()));
+}
  if(bo)bossUpd(bo);
  parts();hazStep();
  if(F[0].st<=0&&F[0].dead)endMatch(0);else if(F[1]&&F[1].st<=0&&F[1].dead)endMatch(1)}
