@@ -461,7 +461,7 @@ function drawHand(b){g.save();g.translate(b.x,b.y);g.rotate(b.rot);const c=b.cur
 /* ================= FLUXO ================= */
 function banner(t,c,d=60){G.bn={t,c,d,a:0}}
 G.ki=G.ki|0;function pickKi(){let i;do{i=Math.random()*KI.length|0}while(i==G.ki);return i}
-function startMatch(c){F=[mk(0,0,0,c.st0||3)];applyKirby(F[0],G.ki);bo=null;G.cfg=c;loadStage(c.stg!=null?c.stg:c.boss?-1:0);if(c.boss){bo=mkBoss();F[0].st=c.pst||3}else{const o=mk(1,0,1,c.st1||2);applyKirby(o,c.ki!=null?c.ki:pickKi());o.dmgM*=1+c.lv*.03;F.push(o)}
+function startMatch(c){F=[mk(0,0,0,c.st0||3)];applyKirby(F[0],c.online?c.p1ki:G.ki);bo=null;G.cfg=c;loadStage(c.stg!=null?c.stg:c.boss?-1:0);if(c.boss){bo=mkBoss();F[0].st=c.pst||3}else{const o=mk(1,0,1,c.st1||2);applyKirby(o,c.online?c.p2ki:c.ki!=null?c.ki:pickKi());o.dmgM*=1+c.lv*.03;F.push(o)}
  if(c.pst&&!c.boss)F[0].st=c.pst;F.forEach(f=>f.ai=null);pts=[];mons=[];shots=[];G.mt=0;G.s='intro';G.ic=0;G.t=0;$('menu').classList.add('off');['ksel','ssel'].forEach(i=>$(i).classList.add('off'));setMusic(c.boss?'boss':'battle')}
 function endMatch(win){if(G.s=='end')return;G.s='end';G.ec=0;G.win=win;banner(win?'GAME!':'DERROTA','#ffe23a',150);S(win?'win':'lose');setMusic(null);const c=G.cfg;
  if(c.arc){if(win){G.score+=1000*(c.round+1)+F[0].st*300+(F[0].dmg<30?500:0)}}}
