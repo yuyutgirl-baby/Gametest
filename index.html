@@ -733,6 +733,7 @@ function kpLoop(){if($('ksel').classList.contains('off'))return;kpT++;const c=$(
 function openKsel(mode){G.pm=mode;G.s='sel';$('menu').classList.add('off');$('ssel').classList.add('off');$('ksel').classList.remove('off');$('kmode').textContent=mode=='arc'?'MODO ARCADE':mode=='vs'?'VS CPU':'ONLINE';$('kdf').parentElement.style.display=mode=='onl'?'none':'';$('kok').textContent=mode=='vs'?'ESCOLHER FASE ▶':mode=='arc'?'COMEÇAR ▶':'IR PARA O ONLINE ▶';buildKsel();kpT=0;requestAnimationFrame(kpLoop)}
 $('arc').onclick=()=>{ainit();openKsel('arc')};$('vs').onclick=()=>{ainit();openKsel('vs')};$('onl').onclick=()=>{ainit();openKsel('onl')};
 $('kback').onclick=()=>{S('jump');showMenu()};
+ window.netOpen=()=>{const ws=new WebSocket('wss://puffbrawl-server.yuyutgirl.workers.dev/ws?mode=match');ws.onopen=()=>console.log('PuffBrawl conectado');ws.onmessage=e=>{console.log('Online:',e.data)};ws.onerror=()=>alert('Erro ao conectar ao servidor');ws.onclose=()=>console.log('Conexão encerrada');window.puffSocket=ws;};
 $('kok').onclick=()=>{ainit();S('copy');if(G.pm=='arc'){$('ksel').classList.add('off');G.base=+$('kdf').value;G.score=0;F=[];arcRound(0)}else if(G.pm=='vs')openSsel();else if(window.netOpen)netOpen()};
 // ---- tela de selecao de fase ----
 const HZN={spring:'molas',wind:'ventos',conv:'esteiras',zone:'armadilhas temporizadas',strike:'objetos caindo',roll:'troncos rolando'};
