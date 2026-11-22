@@ -786,6 +786,16 @@ $('kback').onclick=()=>{
 
 window.netPlayer=null;
 
+
+function netUpdateLobby(){
+ const n=window.netPlayer;
+ $('netcreate').style.display='none';
+ $('netcode').parentElement.style.display='none';
+ $('netmatch').style.display='none';
+ $('netstart').style.display='block';
+ $('netstart').disabled=!(n&&n.ownKi!=null&&n.opponentKi!=null);
+}
+
 function netSendSelection(){
  const n=window.netPlayer;
  if(!n||n.sent||!n.player||!n.ws||n.ws.readyState!==1)return;
@@ -794,7 +804,20 @@ function netSendSelection(){
  n.ws.send(JSON.stringify({type:'select',ki:G.ki}));
  $('ksel').classList.add('off');
  $('onlscr').classList.remove('off');
- $('netstatus').textContent='Personagem escolhido! Aguardando o adversário...';
+ netUpdateLobby();
+ $('netstatus').textContent='Personagem confirmado! Aguardando o outro jogador.';
+}
+
+function netStartIfReady(){
+ const n=window.netPlayer;
+ if(!n||n.started||!n.ownReady||!n.opponentReady||n.ownKi==null||n.opponentKi==null)return;
+ n.started=true;
+ $('netstart').disabled=true;
+ $('onlscr').classList.add('off');
+ $('ksel').classList.add('off');
+ const p1=n.player===1?n.ownKi:n.opponentKi;
+ const p2=n.player===2?n.ownKi:n.opponentKi;
+ startMatch({online:1,lv:0,stg:0,st0:3,st1:3,p1ki:p1,p2ki:p2});
 }
 
 function netStartIfReady(){
