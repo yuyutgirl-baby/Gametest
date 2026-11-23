@@ -965,7 +965,7 @@ function netUpdateLobby(){
  $('netstart').style.display='block';
  $('netstart').disabled=!(n&&n.ownKi!=null&&n.opponentKi!=null&&!n.ownReady)
 }
-d
+
 function netSendSelection(){
  const n=window.netPlayer;
  if(!n||n.sent||!n.player||!n.ws||n.ws.readyState!==1)return;
