@@ -928,8 +928,7 @@ $('netstart').onclick=()=>{
  n.ws.send(JSON.stringify({type:'ready'}));
  netStartIfReady();
 };
-$('netback').onclick=()=>{ netOpen('match');
-};
+
 
 $('netback').onclick=()=>{
  if(window.netPlayer&&window.netPlayer.ws)window.netPlayer.ws.close();
