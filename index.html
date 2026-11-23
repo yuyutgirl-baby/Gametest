@@ -635,15 +635,108 @@ $('cfgb').onclick=()=>{ainit();$('menu').classList.add('off');$('set').classList
   CF[key].x=cl(d.x+sg*(e.clientX-d.sx)/r.width*100,0,100-ww);CF[key].y=cl(d.y-(e.clientY-d.sy)/r.height*100,0,100-hh);applyCF()};
  el.onpointerup=el.onpointercancel=()=>{d=null}});
 applyCF();
+function netSendState(){
+ const n=window.netPlayer;
+ if(!n||n.player!==1||!n.ws||n.ws.readyState!==1)return;
 
+ const players=F.map(p=>{
+  const q={...p};
+  q.on=PL.indexOf(p.on);
+  q.swBy=F.indexOf(p.swBy);
+  if(q.atk){
+   q.atk={...q.atk};
+   q.atk.v=F.indexOf(p.atk.v);
+  }
+  q.ai=null;
+  return q;
+ });
+
+ const projectiles=shots.map(s=>{
+  const q={...s};
+  q.o=F.indexOf(s.o);
+  delete q.end;
+  return q;
+ });
+
+ const state={
+  G:{
+   s:G.s,t:G.t,stg:G.stg,ice:G.ice,
+   shk:G.shk,bn:G.bn,cam:G.cam,mt:G.mt,
+   win:G.win,ec:G.ec,ic:G.ic
+  },
+  F:players,
+  PL:PL,
+  HZ:HZ,
+  bo:bo,
+  mons:mons,
+  shots:projectiles,
+  pts:pts,
+  txts:txts,
+  GRV:GRV,
+  HS:HS
+ };
+
+ try{
+  n.ws.send(JSON.stringify({type:'state',state}));
+ }catch(e){
+  console.error('Erro ao sincronizar a luta:',e);
+ }
+}
+
+function netApplyState(d){
+ if(!d)return;
+
+ G={...G,...d.G};
+ PL.splice(0,PL.length,...d.PL);
+ HZ=d.HZ;
+ GRV=d.GRV;
+ HS=d.HS;
+
+ F=d.F.map(p=>({
+  ...p,
+  on:null,
+  swBy:null,
+  atk:p.atk?{...p.atk,v:null}:null
+ }));
+
+ F.forEach((p,i)=>{
+  const src=d.F[i];
+  p.on=src.on>=0?PL[src.on]:null;
+  p.swBy=src.swBy>=0?F[src.swBy]:null;
+  if(p.atk&&src.atk){
+   p.atk.v=src.atk.v>=0?F[src.atk.v]:null;
+  }
+ });
+
+ bo=d.bo;
+ mons=d.mons;
+ shots=d.shots.map(s=>({...s,o:s.o>=0?F[s.o]:null}));
+ pts=d.pts;
+ txts=d.txts;
+}
 /* ================= STEP ================= */
-function step(){G.t++;
+function step(){
+ const n=window.netPlayer;
+
+ if(G.cfg&&G.cfg.online&&n&&n.started&&n.player===2){
+  const local=rd();
+
+  if((netTick++%2)===0&&n.ws&&n.ws.readyState===1){
+   n.ws.send(JSON.stringify({
+    type:'input',
+    input:local
+   }));
+  }
+  return;
+ }
+
+ G.t++;
  if(MENUS[G.s]){demoT++;return}
  if(HS>0){HS--;return}
  if(G.bn){G.bn.a++;if(G.bn.a>G.bn.d)G.bn=null}
  if(G.s=='intro'){G.ic++;const n=G.ic;if(n==64)banner(G.cfg.boss?'FINAL: MÃO GIGANTE':G.cfg.arc?'ROUND '+(G.cfg.round+1):'VS CPU','#fff',50);
   if(n==110){banner('3','#fff',28);S('cd')}if(n==135){banner('2','#fff',28);S('cd')}if(n==160){banner('1','#ffe23a',28);S('cd')}if(n==185){banner('VAI!','#ff8fbd',40);S('cd',1);G.s='play'}
-  F.forEach(p=>{upd(p,{})});hazStep(1);if(bo)bossUpd(bo);return}
+F.forEach(p=>{upd(p,{})});hazStep(1);if(bo)bossUpd(bo);netSendState();return}
  if(G.s=='end'){G.ec++;F.forEach(p=>upd(p,{}));if(G.ec>200)afterEnd();parts();return}
  if(G.cfg&&G.cfg.online&&window.netPlayer&&window.netPlayer.started){
  const n=window.netPlayer;
@@ -669,7 +762,9 @@ function step(){G.t++;
 }
  if(bo)bossUpd(bo);
  parts();hazStep();txts=txts.filter(q=>{q.y-=.7;return--q.l>0});
- if(F[0].st<=0&&F[0].dead)endMatch(0);else if(F[1]&&F[1].st<=0&&F[1].dead)endMatch(1)}
+ if(F[0].st<=0&&F[0].dead)endMatch(0);else if(F[1]&&F[1].st<=0&&F[1].dead)endMatch(1);
+netSendState();
+}
 function parts(){monStep();shotsUpd();pts=pts.filter(p=>{p.x+=p.vx;p.y+=p.vy;if(p.k!='line'&&p.k!='ring')p.vy+=.15;p.l--;return p.l>0});if(G.shk>0)G.shk*=.85}
 
 
@@ -924,7 +1019,10 @@ window.netOpen=(mode,code='')=>{
    $('netroomcode').textContent='CÓDIGO: '+d.code;
    $('netstatus').textContent='Sala criada. Envie o código ao outro jogador.'
   }
-
+if(d.type==='state'&&n.player===2){
+ netApplyState(d.state);
+ return;
+}
   if(d.type==='room-joined'){
    n.player=2;
    $('netstatus').textContent='Você entrou na sala. Escolha seu Kirby.';
