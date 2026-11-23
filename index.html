@@ -914,13 +914,20 @@ $('netjoin').onclick=()=>{
  netOpen('join',code);
 };
 
-$('netmatch').onclick=()=>{$('netstart').onclick=()=>{
+$('netmatch').onclick=()=>{
+ if(window.netPlayer&&window.netPlayer.ws)window.netPlayer.ws.close();
+ netOpen('match');
+};
+
+$('netstart').onclick=()=>{
  const n=window.netPlayer;
  if(!n||n.started||n.ownKi==null||n.opponentKi==null||n.ownReady)return;
  n.ownReady=true;
  $('netstart').disabled=true;
  $('netstatus').textContent='Você confirmou! Aguardando o outro jogador...';
  n.ws.send(JSON.stringify({type:'ready'}));
+ netStartIfReady();
+};
  netStartIfReady();
 };
  if(window.netPlayer&&window.netPlayer.ws)window.netPlayer.ws.close();
