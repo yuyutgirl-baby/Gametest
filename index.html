@@ -826,7 +826,7 @@ window.netOpen=(mode,code='')=>{
  $('netroomcode').textContent='';
  const ws=new WebSocket('wss://puffbrawl-server.yuyutgirl.workers.dev/ws?mode='+mode+(code?'&code='+encodeURIComponent(code):''));
  window.puffSocket=ws;
- window.netPlayer={ws,player:0,ownKi:null,opponentKi:null,remoteInput:{},sent:false,started:false};
+ window.netPlayer={ws,player:0,ownKi:null,opponentKi:null,remoteInput:{},sent:false,started:false,ownReady:false,opponentReady:false};
 
  ws.onopen=()=>{
   $('netstatus').textContent='Conectado! Aguardando resposta do servidor...';
@@ -866,8 +866,14 @@ window.netOpen=(mode,code='')=>{
    openKsel('onl');
   }
 
-  if(d.type==='select'){
+if(d.type==='select'){
    n.opponentKi=d.ki;
+   if(n.ownKi!=null)netUpdateLobby();
+  }
+
+  if(d.type==='ready'){
+   n.opponentReady=true;
+   $('netstatus').textContent='O adversário confirmou o início!';
    netStartIfReady();
   }
 
@@ -908,7 +914,15 @@ $('netjoin').onclick=()=>{
  netOpen('join',code);
 };
 
-$('netmatch').onclick=()=>{
+$('netmatch').onclick=()=>{$('netstart').onclick=()=>{
+ const n=window.netPlayer;
+ if(!n||n.started||n.ownKi==null||n.opponentKi==null||n.ownReady)return;
+ n.ownReady=true;
+ $('netstart').disabled=true;
+ $('netstatus').textContent='Você confirmou! Aguardando o outro jogador...';
+ n.ws.send(JSON.stringify({type:'ready'}));
+ netStartIfReady();
+};
  if(window.netPlayer&&window.netPlayer.ws)window.netPlayer.ws.close();
  netOpen('match');
 };
