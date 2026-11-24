@@ -533,8 +533,25 @@ function startMatch(c){
 }
 function endMatch(win){if(G.s=='end')return;G.s='end';G.ec=0;G.win=win;banner(win?'GAME!':'DERROTA','#ffe23a',150);S(win?'win':'lose');setMusic(null);const c=G.cfg;
  if(c.arc){if(win){G.score+=1000*(c.round+1)+F[0].st*300+(F[0].dmg<30?500:0)}}}
-function afterEnd(){const c=G.cfg;
- if(c.arc&&G.win){if(c.boss){G.score+=5000;showMenu('ARCADE COMPLETO! Pontos: '+G.score);return}arcRound(c.round+1)}else showMenu(c.arc?'Fim de jogo. Pontos: '+(G.score|0):'')}
+function afterEnd(){
+ const c=G.cfg;
+
+ if(c.online){
+  netReturnToSelection(true);
+  return;
+ }
+
+ if(c.arc&&G.win){
+  if(c.boss){
+   G.score+=5000;
+   showMenu('ARCADE COMPLETO! Pontos: '+G.score);
+   return;
+  }
+  arcRound(c.round+1);
+ }else{
+  showMenu(c.arc?'Fim de jogo. Pontos: '+(G.score|0):'');
+ }
+}
 function arcRound(r){const lv=Math.min(9,G.base+r*.7|0);if(r>=4){startMatch({arc:1,boss:1,round:r,lv,stg:-1,pst:F[0]?F[0].st:3});return}
  startMatch({arc:1,round:r,lv,stg:[0,5,2,8,3,6][r%6],pst:F[0]?Math.min(3,F[0].st+(r?1:0)):3,st1:2})}
 function showMenu(msg){G.s='menu';['ksel','ssel'].forEach(i=>$(i).classList.add('off'));$('menu').classList.remove('off');setMusic('menu');if(msg){banner(msg,'#fff',240)}}
@@ -982,6 +999,25 @@ function netSendSelection(){
 }
 
 function netStartIfReady(){
+function netReturnToSelection(notifyOpponent=true){
+ const n=window.netPlayer;
+ if(!n)return;
+
+ if(notifyOpponent&&n.player===1&&n.ws&&n.ws.readyState===1){
+  n.ws.send(JSON.stringify({type:'return-select'}));
+ }
+
+ n.started=false;
+ n.ownKi=null;
+ n.opponentKi=null;
+ n.ownReady=false;
+ n.opponentReady=false;
+ n.sent=false;
+ n.remoteInput={};
+
+ $('netstart').disabled=true;
+ openKsel('onl');
+}
  const n=window.netPlayer;
  if(!n||n.started||!n.ownReady||!n.opponentReady||n.ownKi==null||n.opponentKi==null)return;
  n.started=true;
@@ -1022,6 +1058,11 @@ window.netOpen=(mode,code='')=>{
    $('netroomcode').textContent='CÓDIGO: '+d.code;
    $('netstatus').textContent='Sala criada. Envie o código ao outro jogador.'
   }
+  if(d.type==='return-select'&&n.player===2){
+ netReturnToSelection(false);
+ return;
+}
+
 if(d.type==='state'&&n.player===2){
  netApplyState(d.state);
  return;
