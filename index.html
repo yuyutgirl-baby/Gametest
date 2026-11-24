@@ -734,7 +734,7 @@ function step(){
 
  G.t++;
  if(MENUS[G.s]){demoT++;return}
- if(HS>0){HS--;return}
+if(HS>0){HS--;netSendState();return}
  if(G.bn){G.bn.a++;if(G.bn.a>G.bn.d)G.bn=null}
  if(G.s=='intro'){G.ic++;const n=G.ic;if(n==64)banner(G.cfg.boss?'FINAL: MÃO GIGANTE':G.cfg.arc?'ROUND '+(G.cfg.round+1):'VS CPU','#fff',50);
   if(n==110){banner('3','#fff',28);S('cd')}if(n==135){banner('2','#fff',28);S('cd')}if(n==160){banner('1','#ffe23a',28);S('cd')}if(n==185){banner('VAI!','#ff8fbd',40);S('cd',1);G.s='play'}
