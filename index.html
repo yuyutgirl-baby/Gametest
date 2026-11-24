@@ -998,7 +998,6 @@ function netSendSelection(){
  $('netstatus').textContent='Personagem confirmado. Aguardando o outro jogador.'
 }
 
-function netStartIfReady(){
 function netReturnToSelection(notifyOpponent=true){
  const n=window.netPlayer;
  if(!n)return;
@@ -1018,17 +1017,21 @@ function netReturnToSelection(notifyOpponent=true){
  $('netstart').disabled=true;
  openKsel('onl');
 }
+
+function netStartIfReady(){
  const n=window.netPlayer;
  if(!n||n.started||!n.ownReady||!n.opponentReady||n.ownKi==null||n.opponentKi==null)return;
+
  n.started=true;
  $('netstart').disabled=true;
  $('onlscr').classList.add('off');
  $('ksel').classList.add('off');
+
  const p1=n.player===1?n.ownKi:n.opponentKi;
  const p2=n.player===2?n.ownKi:n.opponentKi;
- startMatch({online:1,lv:0,stg:0,st0:3,st1:3,p1ki:p1,p2ki:p2})
-}
 
+ startMatch({online:1,lv:0,stg:0,st0:3,st1:3,p1ki:p1,p2ki:p2});
+}
 window.netOpen=(mode,code='')=>{
  $('netstatus').textContent='Conectando ao servidor...';
  $('netroomcode').textContent='';
