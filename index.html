@@ -718,6 +718,20 @@ function netApplyState(d){
 function step(){
  const n=window.netPlayer;
 
+ if(G.cfg&&G.cfg.online&&n&&n.started&&n.player===2){
+  const local=rd();
+
+  if((netTick++%2)===0&&n.ws&&n.ws.readyState===1){
+   n.ws.send(JSON.stringify({
+    type:'input',
+    input:local
+   }));
+  }
+
+  if(G.shk>0)G.shk*=.85;
+  return;
+ }
+
  G.t++;
  if(MENUS[G.s]){demoT++;return}
  if(HS>0){HS--;return}
