@@ -2,6 +2,7 @@
 <html lang="pt-BR"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Puff Brawl</title>
+<style></style>
 #fullBtn {
   position: absolute;
   z-index: 30;
@@ -39,7 +40,6 @@
   max-width: 100vw;
   max-height: 100dvh;
 }
-<style>
 :root{--bg:#1b1530;--ink:#fff4e6;--acc:#ff8fbd;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1b1530;--ink:#fff4e6}}
 :root[data-theme="dark"]{--bg:#1b1530;--ink:#fff4e6}
@@ -1265,7 +1265,7 @@ function updateFullscreenButton() {
 }
 
 document.addEventListener('fullscreenchange', updateFullscreenButton);
-document.addEventListener('webkitfullscreenchange', updateFullscreenButton);MENUS
+document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
 genTechs();
 requestAnimationFrame(loop);
 </script></body></html>
