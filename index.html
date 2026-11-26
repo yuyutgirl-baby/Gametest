@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Puff Brawl</title>
 <style>
 #fullBtn {
@@ -72,7 +72,21 @@ label{font-size:2vmin;display:flex;gap:1vmin;align-items:center}
 #tc .l,#tc .r{position:absolute;display:grid;gap:var(--cg);pointer-events:auto;padding:1cqh;touch-action:none}
 #tc .l{grid-template-columns:repeat(3,var(--cs));left:2%;bottom:3%}
 #tc .r{grid-template-columns:repeat(2,var(--cs));right:2%;bottom:3%}
-#tc button{padding:0;width:var(--cs);height:var(--cs);border-radius:50%;font-size:calc(var(--cs)*.3);transform:none;opacity:var(--co);touch-action:none;border-width:.5cqh;box-shadow:0 .6cqh 0 #000}
+#tc button{
+  padding:0;
+  width:var(--cs);
+  height:var(--cs);
+  border-radius:50%;
+  font-size:calc(var(--cs)*.3);
+  transform:none;
+  opacity:var(--co);
+  touch-action:manipulation;
+  -webkit-user-select:none;
+  user-select:none;
+  -webkit-touch-callout:none;
+  border-width:.5cqh;
+  box-shadow:0 .6cqh 0 #000;
+}
 #tc button.on{background:var(--acc);color:#2a0d1c}
 #tc i{display:block;width:var(--cs);height:var(--cs)}
 #tc.edit button{pointer-events:none}
