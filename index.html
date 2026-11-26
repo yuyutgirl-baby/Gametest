@@ -17,11 +17,15 @@
   transform: none;
 }
 
+
 #w:fullscreen,
-#w:-webkit-full-screen {
+#w:-webkit-full-screen,
+#w.expanded {
   position: fixed;
+  z-index: 9999;
   inset: 0;
   width: 100vw;
+  height: 100vh;
   height: 100dvh;
   max-width: none;
   aspect-ratio: auto;
@@ -33,13 +37,16 @@
 }
 
 #w:fullscreen canvas,
-#w:-webkit-full-screen canvas {
+#w:-webkit-full-screen canvas,
+#w.expanded canvas {
   width: 100%;
   height: 100%;
   object-fit: contain;
   max-width: 100vw;
+  max-height: 100vh;
   max-height: 100dvh;
 }
+
 :root{--bg:#1b1530;--ink:#fff4e6;--acc:#ff8fbd;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1b1530;--ink:#fff4e6}}
 :root[data-theme="dark"]{--bg:#1b1530;--ink:#fff4e6}
@@ -1228,6 +1235,7 @@ G.sst=0;
 function openSsel(){G.s='stg';$('ksel').classList.add('off');$('ssel').classList.remove('off');$('smode').textContent='VS CPU';buildSsel()}
 $('sback').onclick=()=>{S('jump');openKsel('vs')};
 $('sok').onclick=()=>{ainit();S('copy');startMatch({lv:+$('kdf').value,stg:G.sst<0?Math.random()*STG.length|0:G.sst,st1:3,pst:3})};
+
 const fullBtn = $('fullBtn');
 const gameWrap = $('w');
 
@@ -1236,36 +1244,60 @@ function isGameFullscreen() {
          document.webkitFullscreenElement === gameWrap;
 }
 
-async function toggleGameFullscreen() {
-  try {
-    if (isGameFullscreen()) {
-      if (document.exitFullscreen) {
-        await document.exitFullscreen();
-      } else if (document.webkitExitFullscreen) {
-        document.webkitExitFullscreen();
-      }
-    } else if (gameWrap.requestFullscreen) {
-      await gameWrap.requestFullscreen();
-    } else if (gameWrap.webkitRequestFullscreen) {
-      gameWrap.webkitRequestFullscreen();
-    } else {
-      alert('Tela cheia não suportada neste navegador.');
-    }
-  } catch (error) {
-    alert('O navegador não permitiu ativar a tela cheia.');
-  }
+function isGameExpanded() {
+  return gameWrap.classList.contains('expanded');
 }
 
-fullBtn.addEventListener('click', toggleGameFullscreen);
-
 function updateFullscreenButton() {
-  fullBtn.textContent = isGameFullscreen()
+  fullBtn.textContent = (isGameFullscreen() || isGameExpanded())
     ? '⤢ SAIR DA TELA CHEIA'
     : '⛶ TELA CHEIA';
 }
 
+async function toggleGameFullscreen() {
+  if (isGameFullscreen()) {
+    try {
+      if (document.exitFullscreen) await document.exitFullscreen();
+      else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+    } catch (error) {
+      gameWrap.classList.add('expanded');
+    }
+    updateFullscreenButton();
+    return;
+  }
+
+  if (isGameExpanded()) {
+    gameWrap.classList.remove('expanded');
+    updateFullscreenButton();
+    return;
+  }
+
+  try {
+    if (gameWrap.requestFullscreen) {
+      await gameWrap.requestFullscreen();
+      if (isGameFullscreen()) {
+        updateFullscreenButton();
+        return;
+      }
+    } else if (gameWrap.webkitRequestFullscreen) {
+      gameWrap.webkitRequestFullscreen();
+      if (isGameFullscreen()) {
+        updateFullscreenButton();
+        return;
+      }
+    }
+  } catch (error) {
+    // Usa expansão como alternativa.
+  }
+
+  gameWrap.classList.add('expanded');
+  updateFullscreenButton();
+}
+
+fullBtn.addEventListener('click', toggleGameFullscreen);
 document.addEventListener('fullscreenchange', updateFullscreenButton);
 document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
+
 genTechs();
 requestAnimationFrame(loop);
 </script></body></html>
